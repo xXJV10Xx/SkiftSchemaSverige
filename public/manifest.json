@@ -1,0 +1,24 @@
+{
+  "name": "Skiftschemasverige",
+  "short_name": "Skiftschema",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "description": "Skiftschema SSAB Oxelösund med röd/grön-dagar och personliga favoriter.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
+
