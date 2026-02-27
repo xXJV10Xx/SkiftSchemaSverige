@@ -25,10 +25,6 @@
         "./lib/*"
       ]
     },
-    "types": [
-      "next/types/global",
-      "next/image-types/global"
-    ],
     "plugins": [
       {
         "name": "next"
