@@ -17,6 +17,13 @@
 - [ ] CreatePostModal (premium-låst), ForumCard, CommentThread (Supabase Realtime)
 - [ ] useForumAccess: canRead, canComment, canPost; CTA för gäst/free
 
+## Saknas – v2.0 (persistent, chatt, sök, inkorg)
+
+- [ ] Persistent inställningar: localStorage + Supabase (företag, schema/lag, distans, filter)
+- [ ] Chatt & grupper: `chat_groups` + `group_members` (admin, join-godkännande, kick, lämna)
+- [ ] `/search`: live sök grupper + användare (2+ tecken), online-status (Supabase Presence)
+- [ ] Inkorg: likes, grupp-inbjudningar, forum-svar, ny medlem, radera meddelanden
+
 ## Done (implementerat i kodbasen)
 
 - [x] Bygg passerar (`npm run build`)

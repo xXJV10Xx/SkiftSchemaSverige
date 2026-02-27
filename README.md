@@ -118,6 +118,50 @@ Lovable: bygg Forum för skiftschemasverige med FREEMIUM:
 5. Mobile-first, infinite scroll. Next.js App Router, Supabase Auth + Realtime, Tailwind.
 ```
 
+## Saknas – lägg till nu (prioriterat)
+
+### 1. Persistent inställningar (PWA / LocalStorage + Supabase)
+
+Profilinställningar sparas lokalt och synkas till användaren:
+
+- **Företag** (t.ex. SSAB Oxelösund)
+- **Schema/Lag** (röd 3‑skift)
+- **Distans** (default 20 km för swipe/filter)
+- **Filterpreferenser** (nära mig m.m.)
+
+Spara i `localStorage` för gäst + i `profiles` eller egen `user_prefs`-tabell för inloggade.
+
+### 2. Chatt & grupper (admin + join‑godkännande)
+
+**Features:**
+
+- **Skapa grupp:** Användare skapar grupp → blir admin, gruppnamn sökbart.
+- **Join‑begäran:** Sök grupp → begär medlemskap → admin godkänner.
+- **Lägg till:** Medlemmar kan bjuda in andra (status pending tills admin godkänner).
+- **Admin:** Kick via profil‑klick, radera meddelanden.
+- **Lämna:** Användare kan lämna grupp när som helst.
+
+Schema: se `chat_groups` och `group_members` under Supabase‑schema nedan.
+
+### 3. Sök & online‑status
+
+**Söklista (`/search`):**
+
+- Sök t.ex. "SSAB" → dropdown med:
+  - **Grupper:** t.ex. "SSAB Röd Natt" (join‑knapp)
+  - **Användare:** t.ex. "Kalle (online ● SSAB)"
+- Live‑sökning från 2+ tecken.
+
+**Online:** Använd Supabase Presence för grön prick (●) vid användarnamn.
+
+### 4. Inkorg uppdaterad
+
+- Likes från swipe
+- Grupp‑inbjudningar (pending)
+- Forum‑svarsnotiser
+- Ny medlem i chatt
+- Möjlighet att radera meddelanden (per användare)
+
 ## 🧱 Supabase schema (nästa steg)
 
 > Nuvarande tabell: `public.user_favorites` finns redan (se `supabase/migrations/0001_user_favorites.sql`).
@@ -206,6 +250,35 @@ create table if not exists public.group_messages (
 alter table public.group_messages enable row level security;
 ```
 
+### Chattgrupper (`chat_groups`, `group_members`)
+
+```sql
+create table if not exists public.chat_groups (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  creator_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.group_members (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references public.chat_groups(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  status text not null default 'pending' check (status in ('pending', 'approved')),
+  role text not null default 'member' check (role in ('admin', 'member')),
+  created_at timestamptz not null default now(),
+  unique(group_id, user_id)
+);
+
+alter table public.chat_groups enable row level security;
+alter table public.group_members enable row level security;
+
+-- RLS: medlemmar läser grupper; admin kan uppdatera/radera; skapa = auth
+-- group_members: läsa egna; insert = auth; update (status/role) = grupp-admin
+```
+
+Meddelanden kan antingen ligga i befintlig `group_messages` (koppla till `chat_groups.id` som `shift_group`) eller i en dedikerad `chat_messages` med `group_id`.
+
 ### Forum (`forum_posts`, `forum_comments`)
 
 ```sql
@@ -253,11 +326,14 @@ Just nu används **Stripe Payment Links** (redirect). Nästa steg är att sätta
 - premium får annonsfritt
 - `/swipe` kan skyddas av paywall
 
-## ✅ Deploy checklist (snabb)
+## Deploy checklist (innan launch)
 
-- [ ] Supabase: `profiles`, `swipes`, `group_messages`, `forum_posts`, `forum_comments` + RLS
-- [ ] Stripe: webhooks → uppdatera `profiles.is_premium`
-- [ ] Vercel: sätt env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, Stripe links)
+- [ ] Supabase: alla tabeller + RLS (profiles, swipes, group_messages, forum_posts, forum_comments, chat_groups, group_members)
+- [ ] Stripe webhooks → premium-status (`profiles.is_premium`)
+- [ ] PWA: manifest + service worker
+- [ ] Vercel: env vars (Supabase URL + anon key, Stripe links)
+- [ ] Test: free read-only, premium full access
+- [ ] Analytics (valfritt): t.ex. Hotjar för swipe/forum-användning
 - [ ] PWA: testa “Installera app” på mobil
 
 ## Lovable prompt (kopiera)
@@ -278,5 +354,31 @@ Stack:
 - Next.js App Router + TypeScript + Tailwind
 - Supabase auth (Google/Apple + email/password)
 - Använd befintlig lib/shifts.ts för skiftlogik
+```
+
+## Lovable master-prompt (v2.0 – komplett spec)
+
+```txt
+Lovable: bygg SKIFTSCHEMA SVERIGE komplett v2.0:
+
+CORE PAGES:
+/register → profil (bild, SSAB/Oxelösund schema-val)
+/dashboard → mina inställningar (persistent localStorage + Supabase)
+/swipe → premium Tinder-kollegor (5–100 km filter)
+/forum → public read, premium post
+/search → live sök grupper + användare (från 2 bokstäver)
+/chat → grupper (admin, join-godkännande, kick, lämna)
+
+SUPABASE:
+- chat_groups + group_members (pending/approved, admin/member)
+- Presence (online ●)
+- RLS: forum public read, premium write; grupper enligt medlemskap
+
+PWA:
+- Persistent prefs (företag, schema, distans) i localStorage + synk till profil
+- Push: ny like, grupp-inbjudan, forum-svar
+
+UI: shadcn, Tailwind, realtime subscriptions.
+Generera ALLT inkl migrations + middleware.
 ```
 
