@@ -10,6 +10,13 @@
 - [ ] Verifiera checkout på mobil (iOS Safari + Android Chrome)
 - [ ] Verifiera favoriter med riktig Supabase (insert/delete + RLS)
 
+## Forum (PRIO 2 – Lovable / Supabase)
+
+- [ ] Supabase: `forum_posts` + `forum_comments` + RLS (publik läs, auth kommentera, premium posta)
+- [ ] `/forum`-sida: timeline, filter (företag, datum, typ, avdelning)
+- [ ] CreatePostModal (premium-låst), ForumCard, CommentThread (Supabase Realtime)
+- [ ] useForumAccess: canRead, canComment, canPost; CTA för gäst/free
+
 ## Done (implementerat i kodbasen)
 
 - [x] Bygg passerar (`npm run build`)

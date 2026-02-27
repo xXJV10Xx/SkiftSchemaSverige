@@ -93,6 +93,31 @@ Se `.env.example`.
 
 **Free‑users ser annonser**, premium = annonsfritt. (Implementation kan ligga i en hook som läser `profiles.is_premium`.)
 
+### PRIO 2 — Forum
+
+**Mål:** Forum för vikariebyten/skiftbyte – alla läser, registrerade kommenterar, premium postar (freemium).
+
+| Användare | Läs | Kommentera | Posta | Ads |
+|-----------|-----|------------|-------|-----|
+| Gäst | Ja | Nej | Nej | Ja |
+| Free registrerad | Ja | Ja | Nej | Ja |
+| Premium | Ja | Ja | Ja | Nej |
+
+**Sida:** `/forum` (publik läsning). Filter: företag (SSAB/LKAB), datum, typ (söker/har ledigt), avdelning. Timeline + real-time kommentarer (Supabase). CreatePostModal premium-låst; free ser "Uppgradera för att posta!".
+
+**Supabase:** `forum_posts` (company, title, department, shift_team, date, type, description, user_id), `forum_comments` (post_id, user_id, comment). RLS: publik SELECT; endast authenticated INSERT comments; endast `profiles.is_premium` INSERT posts.
+
+**Lovable prompt (Forum):**
+```txt
+Lovable: bygg Forum för skiftschemasverige med FREEMIUM:
+
+1. /forum – publik sida (alla läser poster). Filter: företag, datum, typ (söker/har ledigt), avdelning.
+2. Supabase: forum_posts + forum_comments. RLS: publik SELECT; authenticated INSERT comments; endast is_premium (profiles) INSERT posts.
+3. CreatePostModal (premium-låst). ForumCard + CommentThread med Supabase Realtime.
+4. useForumAccess: canRead, canComment, canPost. Gäst: "Registrera för att kommentera". Free: "Uppgradera för att posta!".
+5. Mobile-first, infinite scroll. Next.js App Router, Supabase Auth + Realtime, Tailwind.
+```
+
 ## 🧱 Supabase schema (nästa steg)
 
 > Nuvarande tabell: `public.user_favorites` finns redan (se `supabase/migrations/0001_user_favorites.sql`).
@@ -181,6 +206,46 @@ create table if not exists public.group_messages (
 alter table public.group_messages enable row level security;
 ```
 
+### Forum (`forum_posts`, `forum_comments`)
+
+```sql
+create table if not exists public.forum_posts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  company text not null,
+  title text not null,
+  department text,
+  shift_team text,
+  date date not null,
+  type text not null check (type in ('söker', 'har_ledigt')),
+  description text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.forum_comments (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references public.forum_posts(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  comment text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.forum_posts enable row level security;
+alter table public.forum_comments enable row level security;
+
+-- Alla kan läsa
+create policy "Public read forum_posts" on public.forum_posts for select using (true);
+create policy "Public read forum_comments" on public.forum_comments for select using (true);
+
+-- Endast inloggade kan kommentera
+create policy "Auth insert forum_comments" on public.forum_comments for insert to authenticated with check (auth.uid() = user_id);
+
+-- Endast premium kan skapa poster (koppla till profiles.is_premium)
+create policy "Premium insert forum_posts" on public.forum_posts for insert to authenticated with check (
+  exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_premium = true)
+);
+```
+
 ## 💳 Stripe / Premium status
 
 Just nu används **Stripe Payment Links** (redirect). Nästa steg är att sätta `profiles.is_premium` via **Stripe webhooks** (subscription status), så att:
@@ -190,7 +255,7 @@ Just nu används **Stripe Payment Links** (redirect). Nästa steg är att sätta
 
 ## ✅ Deploy checklist (snabb)
 
-- [ ] Supabase: `profiles`, `swipes`, `group_messages` + RLS
+- [ ] Supabase: `profiles`, `swipes`, `group_messages`, `forum_posts`, `forum_comments` + RLS
 - [ ] Stripe: webhooks → uppdatera `profiles.is_premium`
 - [ ] Vercel: sätt env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, Stripe links)
 - [ ] PWA: testa “Installera app” på mobil
