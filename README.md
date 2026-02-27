@@ -382,3 +382,98 @@ UI: shadcn, Tailwind, realtime subscriptions.
 Generera ALLT inkl migrations + middleware.
 ```
 
+## Error-prevention & v3.0 (error-free fokus)
+
+Inspirerat av Tinder (double-opt-in), WhatsApp (felprevention), Google Calendar (skiftbyten).
+
+### Error-prevention (Tinder/WhatsApp-stil)
+
+- **Zod-validering:** Alla formulär (register, forum-post, swipe-inställningar).
+- **Optimistic updates:** UI uppdateras direkt; rollback vid fel.
+- **Offline-kö:** Swipe/post sparas lokalt (IndexedDB eller localStorage), synk när online.
+- **Toast-fel:** Svenska meddelanden, t.ex. "Ingen internet? Fungerar offline!".
+- **Rate limits:** T.ex. max 5 forum-poster/timme (anti-spam).
+
+### PWA offline-first (kalender-appar)
+
+- **Service Worker:** Cache forum, scheman, profiler.
+- **IndexedDB:** Lokal swipe-historik + utkast (drafts).
+- **Background Sync:** Posta/kommentera när anslutning återkommer.
+- **Nätverksstatus:** Visuell indikator t.ex. "Offline – 3 nya poster sparade".
+
+### Safety & moderation (Tinder-must-have)
+
+- **Rapportera/blockera:** Swipe/profil → rapportera → auto-dölj för rapporterande användare.
+- **Double opt-in:** Match endast om båda har likat (ingen enkelriktad synlighet).
+
+### Kalenderintegration (Google Calendar-stil)
+
+- **iCal-export:** "SSAB Röd Schema.ics" (generera från `lib/shifts.ts`).
+- **Skiftbyte-förslag:** "Byt min 15/3 natt mot din 16/3?" (koppling till forum/inkorg).
+- **Återkommande skift:** Veckoschema auto-genererat från befintlig skiftlogik.
+
+### Avancerad sök & online (Telegram-stil)
+
+- **Live-sök:** Från 2 tecken → användare (● online) + grupper.
+- **Online Presence:** Supabase Presence-channel för grön prick.
+- **Stjärnmärkta:** Spara viktiga forum-poster eller chattmeddelanden (egen tabell eller flagga).
+
+### Rekommenderad filstruktur (error-minimerande)
+
+```text
+src/
+├── lib/
+│   ├── shifts.ts          # SSAB-scheman (befintlig)
+│   ├── validators.ts      # Zod-scheman
+│   ├── supabase.ts        # client + RLS-hjälpare
+│   └── error.ts           # central felhantering
+├── hooks/
+│   ├── useForum.ts        # access-nivåer
+│   ├── useOnline.ts       # presence
+│   └── useOfflineQueue.ts # offline-kö + sync
+├── components/
+│   ├── ui/                # shadcn
+│   ├── forum/             # PostCard, FilterBar
+│   ├── chat/              # GroupList, MemberManager
+│   └── swipe/             # SwipeCard, DistanceSlider
+├── app/
+│   ├── (public)/          # forum, search
+│   ├── (auth)/            # dashboard, swipe, chat
+│   ├── middleware.ts      # auth-guards
+│   └── error.tsx          # global error boundary
+public/
+├── manifest.json
+└── sw.js
+supabase/
+├── migrations/
+└── seed.sql (valfritt)
+```
+
+### Saknade anti-crash-features (översikt)
+
+| Kategori | Feature | Undviker |
+|----------|---------|----------|
+| Auth | E-postbekräftelse + lösenordsåterställning | Fake-konton |
+| Prestanda | Infinite scroll + React Query (eller SWR) | Långsam laddning |
+| Säkerhet | CSRF-skydd + CAPTCHA på register | Spam-bots |
+| Analytics | PostHog (eller liknande) för swipe-dropoff | Blind optimering |
+| Mobil | Haptic feedback + keyboard avoid | Dålig UX |
+
+Felsökningslista: se `ERRORLIST.md`.
+
+### Lovable prompt (v3.0 – error-free)
+
+```txt
+Lovable: bygg ERROR-FREE Skiftschema Sverige v3.0:
+
+1. FILSTRUKTUR: lib/validators.ts (Zod), lib/error.ts, hooks/useOfflineQueue, app/error.tsx (global boundary).
+2. PWA offline-first: service worker cache (forum, scheman), IndexedDB för offline-kö, Background Sync, nätverksstatus-toast ("Offline – X sparade").
+3. SAFETY: rapportera/blockera, double-opt-in för matcher (båda måste lika).
+4. KALENDER: iCal-export från lib/shifts.ts, skiftbyte-förslag (länk till forum).
+5. SÖK: live användare (● online) + grupper från 2 tecken, Supabase Presence.
+6. ERROR: Zod på alla forms, optimistic updates + rollback, toast på svenska, rate limit forum (t.ex. 5/timme).
+
+Inkludera middleware (auth), error boundary, och checklista enligt README.
+```
+
+

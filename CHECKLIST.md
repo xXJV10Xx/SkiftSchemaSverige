@@ -24,6 +24,23 @@
 - [ ] `/search`: live sök grupper + användare (2+ tecken), online-status (Supabase Presence)
 - [ ] Inkorg: likes, grupp-inbjudningar, forum-svar, ny medlem, radera meddelanden
 
+## v3.0 – Error-prevention & anti-crash
+
+- [ ] Zod: alla formulär (register, forum-post, swipe)
+- [ ] Optimistic updates + rollback vid fel; toast-fel på svenska
+- [ ] Offline-kö: IndexedDB eller localStorage, Background Sync; nätverksstatus-toast
+- [ ] Rate limit forum (t.ex. 5 poster/timme)
+- [ ] PWA: cache forum/scheman i SW; offline-indikator
+- [ ] Safety: rapportera/blockera; double-opt-in för matcher
+- [ ] Kalender: iCal-export; skiftbyte-förslag
+- [ ] Global error boundary (`app/error.tsx`); `lib/error.ts` central hantering
+- [ ] Auth: e-postbekräftelse + lösenordsåterställning (anti-fake)
+- [ ] Prestanda: infinite scroll + React Query/SWR
+- [ ] Säkerhet: CSRF + CAPTCHA på register (anti-spam)
+- [ ] Mobil: haptic feedback + keyboard avoid där relevant
+
+**Felsökning:** Se `ERRORLIST.md` för vanliga fel och lösningar.
+
 ## Done (implementerat i kodbasen)
 
 - [x] Bygg passerar (`npm run build`)
