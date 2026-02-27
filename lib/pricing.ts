@@ -1,16 +1,7 @@
-// SKIFTSCHEMA SVERIGE - STRIPE PAYMENT LINKS
-// Replace med dina länkar från Stripe Payment Links (eller sätt env-variablerna).
-
 export const PAYMENT_LINKS = {
-  premium:
-    process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PREMIUM ??
-    "https://buy.stripe.com/[DIN_PREMIUM_LÄNK]", // 39 SEK
-  swipe:
-    process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_SWIPE ??
-    "https://buy.stripe.com/[DIN_SWIPE_LÄNK]", // 69 SEK
-  bundle:
-    process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_BUNDLE ??
-    "https://buy.stripe.com/00weVe06FgW9gNVcVZ7Vm05", // 108 SEK
+  premium: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_PREMIUM ?? "https://buy.stripe.com/9B67sM4mV0Xb1T15tx7Vm06",
+  swipe: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_SWIPE ?? "https://buy.stripe.com/00wcN6dXveO1fJR5tx7Vm07",
+  bundle: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_BUNDLE ?? "https://buy.stripe.com/00weVe06FgW9gNVcVZ7Vm05",
 } as const;
 
 export interface PricingPlan {

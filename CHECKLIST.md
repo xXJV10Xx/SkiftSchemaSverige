@@ -6,7 +6,7 @@
 - [x] Favoriter sparas per användare (RLS) + UI ★/☆
 - [x] PWA: `manifest.json`, service worker, ikoner, mobil footer-nav
 - [x] Stripe Payment Links UI (lazy-load)
-- [ ] Stripe Payment Links: fyll i riktiga länkar i `.env.local` (premium + swipe)
+- [x] Stripe Payment Links: riktiga länkar (premium + swipe + bundle)
 - [ ] Verifiera checkout på mobil (iOS Safari + Android Chrome)
 - [ ] Verifiera favoriter med riktig Supabase (insert/delete + RLS)
 
