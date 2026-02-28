@@ -27,7 +27,7 @@ function isCacheableRequest(request) {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return false;
   return (
-    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/assets/") ||
     url.pathname === "/manifest.json" ||
     url.pathname === "/icon.svg" ||
     url.pathname === "/maskable-icon.svg" ||
