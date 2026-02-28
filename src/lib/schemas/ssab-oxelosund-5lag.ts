@@ -27,7 +27,7 @@ export function getShift(lag: 1 | 2 | 3 | 4 | 5, dateStr: string): ShiftCode | n
   if (isNaN(date.getTime())) throw new Error("Ogiltigt datum");
 
   const diffDays = Math.floor((date.getTime() - START_DATE.getTime()) / 86400000);
-  const index = (diffDays + OFFSET) % CYCLE_LENGTH;
+  const index = ((diffDays + OFFSET) % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH;
 
   const pattern = PATTERNS[`Lag${lag}`];
   const shiftChar = pattern.charAt(index);

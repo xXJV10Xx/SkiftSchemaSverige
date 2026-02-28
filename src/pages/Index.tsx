@@ -1,9 +1,7 @@
-"use client";
-
 import React, { useEffect, useMemo, useState } from "react";
 import { MonthCalendar } from "../components/MonthCalendar";
 import { useAuth } from "../components/AuthProvider";
-import { fetchFavoritesForMonth, toggleFavorite } from "@lib/favorites";
+import { fetchFavoritesForMonth, toggleFavorite } from "@/lib/favorites";
 import { PricingLauncher } from "../components/PricingLauncher";
 
 function clampLag(n: number): 1 | 2 | 3 | 4 | 5 {
@@ -11,7 +9,7 @@ function clampLag(n: number): 1 | 2 | 3 | 4 | 5 {
   return v as 1 | 2 | 3 | 4 | 5;
 }
 
-export default function HomePage() {
+export default function Index() {
   const now = new Date();
   const [year, setYear] = useState(() => now.getFullYear());
   const [month, setMonth] = useState(() => now.getMonth() + 1);
@@ -42,7 +40,7 @@ export default function HomePage() {
     fetchFavoritesForMonth({ year, month, lag: lagNum })
       .then((rows) => {
         if (cancelled) return;
-        setFavorites(new Set(rows.map((r) => r.date)));
+        setFavorites(new Set(rows.map((r) => r.date_str)));
       })
       .catch(() => {
         if (cancelled) return;
@@ -62,7 +60,7 @@ export default function HomePage() {
     setNotice(null);
 
     if (!configured) {
-      setNotice("Supabase är inte konfigurerat ännu. Lägg in env-variablerna för att kunna logga in och spara favoriter.");
+      setNotice("Backend är inte konfigurerat ännu.");
       return;
     }
 
@@ -99,9 +97,7 @@ export default function HomePage() {
                 onChange={(e) => setYear(Number(e.target.value))}
               >
                 {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
+                  <option key={y} value={y}>{y}</option>
                 ))}
               </select>
             </div>
@@ -137,9 +133,7 @@ export default function HomePage() {
                   onChange={(e) => setLagNum(clampLag(Number(e.target.value)))}
                 >
                   {[1, 2, 3, 4, 5].map((n) => (
-                    <option key={n} value={n}>
-                      Lag {n}
-                    </option>
+                    <option key={n} value={n}>Lag {n}</option>
                   ))}
                 </select>
                 <button
@@ -155,7 +149,7 @@ export default function HomePage() {
 
           <div className="flex items-center justify-between gap-2 md:justify-end">
             <div className="text-xs text-slate-400">
-              {!configured ? "Supabase ej konfigurerat" : user ? "Inloggad" : "Inte inloggad"}
+              {!configured ? "Backend ej konfigurerat" : user ? "Inloggad" : "Inte inloggad"}
               {favoritesLoading ? " · laddar favoriter…" : ""}
             </div>
             {user ? (
@@ -207,4 +201,3 @@ export default function HomePage() {
     </div>
   );
 }
-

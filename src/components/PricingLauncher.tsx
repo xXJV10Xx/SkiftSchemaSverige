@@ -1,16 +1,6 @@
-"use client";
+import React, { lazy, Suspense, useState } from "react";
 
-import dynamic from "next/dynamic";
-import React, { useState } from "react";
-
-const PricingSection = dynamic(() => import("./PricingSection").then((m) => m.PricingSection), {
-  ssr: false,
-  loading: () => (
-    <div className="rounded-3xl border border-slate-800 bg-slate-950/30 p-6 text-sm text-slate-300">
-      Laddar prislista…
-    </div>
-  ),
-});
+const PricingSection = lazy(() => import("./PricingSection").then((m) => ({ default: m.PricingSection })));
 
 export function PricingLauncher() {
   const [open, setOpen] = useState(false);
@@ -36,8 +26,17 @@ export function PricingLauncher() {
         </div>
       </div>
 
-      {open ? <PricingSection /> : null}
+      {open ? (
+        <Suspense
+          fallback={
+            <div className="rounded-3xl border border-slate-800 bg-slate-950/30 p-6 text-sm text-slate-300">
+              Laddar prislista…
+            </div>
+          }
+        >
+          <PricingSection />
+        </Suspense>
+      ) : null}
     </div>
   );
 }
-

@@ -1,6 +1,5 @@
 // lib/shifts.ts - SKIFTSCHEMA SVERIGE
 // Använder SSAB Oxelösund 5-lag v3.0 (kalibrerad) + RÖDA/GRÖNA dagar
-// Källa: lib/schemas/ssab-oxelosund-5lag.ts
 
 import { getSchema } from "./schemas";
 
@@ -8,7 +7,6 @@ const schema = getSchema();
 
 export type ShiftCode = "F" | "E" | "N";
 
-// Re-export från aktivt schema
 export const getShift = schema.getShift;
 export const getAllShifts = schema.getAllShifts;
 export const generateMonth = schema.generateMonth;
@@ -18,7 +16,7 @@ export const SCHEMA_LABEL = schema.label;
 // ================= RÖDA/GRÖNA DAGER =================
 export interface SpecialDay {
   tooltip: string;
-  dayNumState: 0 | 1 | 2; // 0=vardag, 1=röd(storhelg), 2=grön(ledig/halvdag)
+  dayNumState: 0 | 1 | 2;
   shiftStates: Partial<Record<ShiftCode, 0 | 1 | 2>>;
 }
 
@@ -35,7 +33,7 @@ export function toDateStr(date: Date) {
 
 function parseDateStr(dateStr: string) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
-  if (!m) throw new Error(`Invalid dateStr: ${dateStr} (expected YYYY-MM-DD)`);
+  if (!m) throw new Error(`Invalid dateStr: ${dateStr}`);
   return { y: Number(m[1]), mo: Number(m[2]), d: Number(m[3]) };
 }
 
@@ -85,14 +83,9 @@ function midsummerDayDateStr(year: number) {
 }
 
 function allSaintsDayDateStr(year: number) {
-  const candidates: Array<{ month: number; day: number }> = [
-    { month: 10, day: 31 },
-    { month: 11, day: 1 },
-    { month: 11, day: 2 },
-    { month: 11, day: 3 },
-    { month: 11, day: 4 },
-    { month: 11, day: 5 },
-    { month: 11, day: 6 },
+  const candidates = [
+    { month: 10, day: 31 }, { month: 11, day: 1 }, { month: 11, day: 2 },
+    { month: 11, day: 3 }, { month: 11, day: 4 }, { month: 11, day: 5 }, { month: 11, day: 6 },
   ];
   for (const c of candidates) {
     const dt = new Date(Date.UTC(year, c.month - 1, c.day));
@@ -103,16 +96,8 @@ function allSaintsDayDateStr(year: number) {
 
 function buildSpecialDays(fromYear: number, toYear: number): Record<string, SpecialDay> {
   const map: Record<string, SpecialDay> = {};
-  const RED: SpecialDay = {
-    tooltip: "",
-    dayNumState: 1,
-    shiftStates: { F: 2, E: 2, N: 1 },
-  };
-  const GREEN: SpecialDay = {
-    tooltip: "",
-    dayNumState: 2,
-    shiftStates: { F: 2, E: 2, N: 1 },
-  };
+  const RED: SpecialDay = { tooltip: "", dayNumState: 1, shiftStates: { F: 2, E: 2, N: 1 } };
+  const GREEN: SpecialDay = { tooltip: "", dayNumState: 2, shiftStates: { F: 2, E: 2, N: 1 } };
 
   for (let year = fromYear; year <= toYear; year++) {
     const easter = easterSundayDateStr(year);
@@ -149,7 +134,7 @@ const COLOR_MAP: Record<number, { bg: string; text: string; label: string }> = {
   2: { bg: "#14532d", text: "#fff", label: "GRÖN" },
 };
 
-// ================= ShiftData + getShiftFull (kalender-API) =================
+// ================= ShiftData + getShiftFull =================
 export interface ShiftData {
   shift: ShiftCode | null;
   special?: {

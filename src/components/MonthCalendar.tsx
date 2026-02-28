@@ -1,20 +1,17 @@
-"use client";
-
 import React, { useMemo } from "react";
-import { generateMonthShifts, ShiftData } from "@lib/shifts";
+import { generateMonthShifts, ShiftData } from "@/lib/shifts";
 
 const WEEKDAYS_SV = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"] as const;
 
 function mondayIndex(jsDay: number) {
-  // JS: 0=Sunday..6=Saturday  -> 0=Monday..6=Sunday
   return (jsDay + 6) % 7;
 }
 
 export type MonthCalendarProps = {
   year: number;
-  month: number; // 1-12
+  month: number;
   lagNum: 1 | 2 | 3 | 4 | 5;
-  favorites?: Set<string>; // YYYY-MM-DD
+  favorites?: Set<string>;
   onToggleFavorite?: (dateStr: string, lagNum: 1 | 2 | 3 | 4 | 5) => void;
 };
 
@@ -123,4 +120,3 @@ function DayCell({
     </div>
   );
 }
-
