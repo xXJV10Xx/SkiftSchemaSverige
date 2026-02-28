@@ -1,20 +1,19 @@
 // lib/shifts.ts - SKIFTSCHEMA SVERIGE
-// SSAB Oxelösund 3-skift + RÖDA/GRÖNA dagar
-// Kalibrerat mot skiftschema.se (plan: 2026-2029)
+// Använder SSAB Oxelösund 5-lag v3.0 (kalibrerad) + RÖDA/GRÖNA dagar
+// Källa: lib/schemas/ssab-oxelosund-5lag.ts
+
+import { getSchema } from "./schemas";
+
+const schema = getSchema();
 
 export type ShiftCode = "F" | "E" | "N";
 
-// ================= SSAB 5-LAG MALLAR =================
-const PATTERNS: Record<string, string> = {
-  Lag1: "     FFEENNN    FFFEENN     FFEEENN    FFFEENN",
-  Lag2: "NN     FFEEENN     FFEENNN    FFFEENN     FFEE",
-  Lag3: "EENNN    FFFEENN     FFEEENN     FFEEENN    ",
-  Lag4: "FFEEENN     FFEENNN    FFFEENN     FFEEENN   ",
-  Lag5: "  FFFEENN     FFEEENN     FFEENNN    FFFEENN ",
-};
-
-const START_DATE_STR = "1999-01-21";
-const CYCLE_LENGTH = 35;
+// Re-export från aktivt schema
+export const getShift = schema.getShift;
+export const getAllShifts = schema.getAllShifts;
+export const generateMonth = schema.generateMonth;
+export const SCHEMA_VERSION = schema.version;
+export const SCHEMA_LABEL = schema.label;
 
 // ================= RÖDA/GRÖNA DAGER =================
 export interface SpecialDay {
@@ -45,12 +44,7 @@ function utcDayNumber(dateStr: string) {
   return Math.floor(Date.UTC(y, mo - 1, d) / 86_400_000);
 }
 
-function mod(n: number, m: number) {
-  return ((n % m) + m) % m;
-}
-
 function easterSundayDateStr(year: number) {
-  // Anonymous Gregorian algorithm (Meeus/Jones/Butcher)
   const a = year % 19;
   const b = Math.floor(year / 100);
   const c = year % 100;
@@ -63,7 +57,7 @@ function easterSundayDateStr(year: number) {
   const k = c % 4;
   const l = (32 + 2 * e + 2 * i - h - k) % 7;
   const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31); // 3=March, 4=April
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
   const day = ((h + l - 7 * m + 114) % 31) + 1;
   return `${year}-${pad2(month)}-${pad2(day)}`;
 }
@@ -75,7 +69,6 @@ function addDays(dateStr: string, deltaDays: number) {
 }
 
 function midsummerEveDateStr(year: number) {
-  // Friday between June 19-25
   for (let day = 19; day <= 25; day++) {
     const dt = new Date(Date.UTC(year, 5, day));
     if (dt.getUTCDay() === 5) return `${year}-06-${pad2(day)}`;
@@ -84,7 +77,6 @@ function midsummerEveDateStr(year: number) {
 }
 
 function midsummerDayDateStr(year: number) {
-  // Saturday between June 20-26
   for (let day = 20; day <= 26; day++) {
     const dt = new Date(Date.UTC(year, 5, day));
     if (dt.getUTCDay() === 6) return `${year}-06-${pad2(day)}`;
@@ -93,7 +85,6 @@ function midsummerDayDateStr(year: number) {
 }
 
 function allSaintsDayDateStr(year: number) {
-  // Saturday between Oct 31-Nov 6
   const candidates: Array<{ month: number; day: number }> = [
     { month: 10, day: 31 },
     { month: 11, day: 1 },
@@ -112,7 +103,6 @@ function allSaintsDayDateStr(year: number) {
 
 function buildSpecialDays(fromYear: number, toYear: number): Record<string, SpecialDay> {
   const map: Record<string, SpecialDay> = {};
-
   const RED: SpecialDay = {
     tooltip: "",
     dayNumState: 1,
@@ -140,30 +130,26 @@ function buildSpecialDays(fromYear: number, toYear: number): Record<string, Spec
     map[`${year}-05-01`] = { ...RED, tooltip: "Första maj" };
     map[ascension] = { ...RED, tooltip: "Kristi himmelsfärdsdag" };
     map[`${year}-06-06`] = { ...RED, tooltip: "Sveriges nationaldag" };
-
     map[midsummerEveDateStr(year)] = { ...GREEN, tooltip: "Midsommarafton" };
     map[midsummerDayDateStr(year)] = { ...RED, tooltip: "Midsommardagen" };
     map[allSaintsDayDateStr(year)] = { ...RED, tooltip: "Alla helgons dag" };
-
     map[`${year}-12-24`] = { ...GREEN, tooltip: "Julafton" };
     map[`${year}-12-25`] = { ...RED, tooltip: "Juldagen" };
     map[`${year}-12-26`] = { ...RED, tooltip: "Annandag jul" };
     map[`${year}-12-31`] = { ...GREEN, tooltip: "Nyårsafton" };
   }
-
   return map;
 }
 
 const SPECIAL_DAYS_2026_2029: Record<string, SpecialDay> = buildSpecialDays(2026, 2029);
 
-// ================= FÄRGER =================
 const COLOR_MAP: Record<number, { bg: string; text: string; label: string }> = {
   0: { bg: "#0b1220", text: "#e2e8f0", label: "Vardag" },
   1: { bg: "#7f1d1d", text: "#fff", label: "RÖD (storhelg)" },
   2: { bg: "#14532d", text: "#fff", label: "GRÖN" },
 };
 
-// ================= CORE SHIFT-FUNKTIONER =================
+// ================= ShiftData + getShiftFull (kalender-API) =================
 export interface ShiftData {
   shift: ShiftCode | null;
   special?: {
@@ -175,23 +161,8 @@ export interface ShiftData {
   lag: number;
 }
 
-export function getShift(lagNum: number, dateStr: string): ShiftCode | null {
-  const lag = `Lag${lagNum}`;
-  const pattern = PATTERNS[lag];
-  if (!pattern) return null;
-
-  const startDay = utcDayNumber(START_DATE_STR);
-  const targetDay = utcDayNumber(dateStr);
-  const diffDays = targetDay - startDay;
-  const index = mod(diffDays, CYCLE_LENGTH);
-
-  const ch = pattern[index] as ShiftCode | " " | undefined;
-  if (ch === "F" || ch === "E" || ch === "N") return ch;
-  return null;
-}
-
 export function getShiftFull(lagNum: 1 | 2 | 3 | 4 | 5, dateStr: string): ShiftData {
-  const baseShift = getShift(lagNum, dateStr);
+  const baseShift = schema.getShift(lagNum, dateStr);
   if (!baseShift) {
     return { shift: null, dateStr, lag: lagNum };
   }
@@ -216,7 +187,6 @@ export function getShiftFull(lagNum: 1 | 2 | 3 | 4 | 5, dateStr: string): ShiftD
   };
 }
 
-// ================= KALENDER-GENERATOR =================
 export function generateMonthShifts(
   year: number,
   month: number,
@@ -235,7 +205,6 @@ export function generateMonthShifts(
   return shifts;
 }
 
-// ================= ALLA LAG för månad =================
 export function generateAllLagsMonth(year: number, month: number): Record<number, ShiftData[]> {
   const allLags: Record<number, ShiftData[]> = {};
   for (let lag = 1; lag <= 5; lag++) {
@@ -244,5 +213,4 @@ export function generateAllLagsMonth(year: number, month: number): Record<number
   return allLags;
 }
 
-// ================= EXPORTER =================
-export { PATTERNS, START_DATE_STR as START_DATE, CYCLE_LENGTH, SPECIAL_DAYS_2026_2029, COLOR_MAP };
+export { SPECIAL_DAYS_2026_2029, COLOR_MAP };
