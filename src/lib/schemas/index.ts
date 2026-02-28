@@ -1,5 +1,4 @@
 // lib/schemas/index.ts – centralt schema-register
-// Lägg till nya företag/scheman här för enkel åtkomst.
 
 import * as ssabOxelosund from "./ssab-oxelosund-5lag";
 
@@ -16,7 +15,6 @@ export const SCHEMAS = {
 
 export const DEFAULT_SCHEMA_ID: SchemaId = "ssab-oxelosund-5lag";
 
-/** Hämta aktivt schema (nu: SSAB Oxelösund 5-lag). Utökas när fler företag läggs till. */
 export function getSchema(schemaId: SchemaId = DEFAULT_SCHEMA_ID): (typeof SCHEMAS)["ssab-oxelosund-5lag"] {
   const key = schemaId as keyof typeof SCHEMAS;
   const schema = SCHEMAS[key];

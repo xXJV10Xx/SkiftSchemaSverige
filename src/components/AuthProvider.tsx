@@ -1,8 +1,6 @@
-"use client";
-
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 
 type AuthContextValue = {
   configured: boolean;
@@ -20,6 +18,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+
+  const configured = Boolean(supabase);
 
   useEffect(() => {
     if (!supabase) {
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      configured: Boolean(supabase),
+      configured,
       user,
       session,
       loading,
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [loading, session, user]
+    [loading, session, user, configured]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -97,4 +97,3 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within <AuthProvider />");
   return ctx;
 }
-

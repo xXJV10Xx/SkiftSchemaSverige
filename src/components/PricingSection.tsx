@@ -1,7 +1,5 @@
-"use client";
-
 import React, { useMemo, useState } from "react";
-import { PRICING_PLANS } from "@lib/pricing";
+import { PRICING_PLANS } from "@/lib/pricing";
 
 export function PricingSection() {
   const plans = useMemo(() => PRICING_PLANS, []);
@@ -19,7 +17,6 @@ export function PricingSection() {
       <div className="grid gap-4 md:grid-cols-3 md:gap-6">
         {plans.map((plan) => {
           const isBusy = clicked === plan.id;
-
           return (
             <div
               key={plan.id}
@@ -51,7 +48,6 @@ export function PricingSection() {
                 disabled={isBusy}
                 onClick={() => {
                   setClicked(plan.id);
-                  // Viktigt för mobil: navigera direkt på klick (ingen extra Stripe-laddning).
                   window.location.assign(plan.link);
                 }}
               >
@@ -68,4 +64,3 @@ export function PricingSection() {
     </section>
   );
 }
-

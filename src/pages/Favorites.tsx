@@ -1,10 +1,8 @@
-"use client";
-
 import React, { useEffect, useMemo, useState } from "react";
-import { useAuth } from "../../components/AuthProvider";
-import { fetchAllFavorites, type FavoriteRow } from "@lib/favorites";
+import { useAuth } from "../components/AuthProvider";
+import { fetchAllFavorites, type FavoriteRow } from "@/lib/favorites";
 
-export default function FavoritesPage() {
+export default function Favorites() {
   const { configured, user } = useAuth();
   const [rows, setRows] = useState<FavoriteRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +40,7 @@ export default function FavoritesPage() {
   const grouped = useMemo(() => {
     const byMonth = new Map<string, FavoriteRow[]>();
     for (const r of rows) {
-      const key = r.date.slice(0, 7); // YYYY-MM
+      const key = r.date_str.slice(0, 7);
       byMonth.set(key, [...(byMonth.get(key) ?? []), r]);
     }
     return Array.from(byMonth.entries()).sort(([a], [b]) => a.localeCompare(b));
@@ -52,9 +50,7 @@ export default function FavoritesPage() {
     <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
       <h1 className="text-base font-semibold text-slate-100">Favoriter</h1>
       {!configured ? (
-        <p className="mt-2 text-sm text-slate-300">
-          Supabase är inte konfigurerat ännu. Lägg in env-variablerna för att kunna spara favoriter.
-        </p>
+        <p className="mt-2 text-sm text-slate-300">Backend är inte konfigurerat ännu.</p>
       ) : !user ? (
         <p className="mt-2 text-sm text-slate-300">Logga in för att se och spara favoriter.</p>
       ) : (
@@ -77,9 +73,9 @@ export default function FavoritesPage() {
                 <ul className="mt-2 space-y-2">
                   {items.map((r) => (
                     <li key={r.id} className="flex items-center justify-between text-sm text-slate-100">
-                      <span className="tabular-nums">{r.date}</span>
+                      <span className="tabular-nums">{r.date_str}</span>
                       <span className="rounded-lg bg-slate-900/60 px-2 py-0.5 text-xs text-slate-200">
-                        Lag {r.lag}
+                        Lag {r.team_num}
                       </span>
                     </li>
                   ))}
@@ -92,4 +88,3 @@ export default function FavoritesPage() {
     </div>
   );
 }
-
